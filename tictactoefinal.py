@@ -69,6 +69,25 @@ class State:
         self.board[position] = self.playerSymbol
         # switch to another player
         self.playerSymbol = -1 if self.playerSymbol == 1 else 1
+    
+    def onButtonClick(self,row,col):
+        
+        selected_action = (row,col)
+        self.updateState(selected_action)
+        self.showBoard()
+        self.play_ai()
+        win = self.winner()
+        if win is not None:
+                    if win == -1:
+                        print(self.p2.name, "wins!")
+                    else:
+                        print("tie!")
+                    self.reset()
+                    self.showBoard()
+                    
+        
+                
+
 
     # only when game ends
     def giveReward(self):
@@ -132,7 +151,23 @@ class State:
                         self.p2.reset()
                         self.reset()
                         break
-
+    
+    def play_ai(self):
+            positions = self.availablePositions()
+            p1_action = self.p1.chooseAction(positions, self.board, self.playerSymbol)
+            # take action and upate board state
+            self.updateState(p1_action)
+            self.showBoard()
+            # check board status if it is end
+            win = self.winner()
+            if win is not None:
+                if win == 1:
+                    print(self.p1.name, "wins!")
+                else:
+                    print("tie!")
+                self.reset()
+              
+        
     # play with human
     def play2(self):
         while not self.isEnd:
@@ -170,15 +205,26 @@ class State:
 
     def showBoard(self):
         # p1: x  p2: o
+        button = tk.Button(root, text="Button")
         for i in range(BOARD_ROWS):
             for j in range(BOARD_COLS):
                 player_symbol = "X" if self.board[i][j] == 1 else "O" if self.board[i][j] == -1 else " "
-                label = tk.Label(root, text=player_symbol, width=10, height=4, relief="ridge")
-                label.grid(row=i, column=j)
-
+                if(player_symbol == " "):
+                    command = lambda row = i, col = j: self.onButtonClick(row,col)
+                    label=tk.Button(root, text="", width=10, height=4, command=command, relief="ridge")
+                    label.grid(row=i, column=j)
+                   
+                else:
+                    label = tk.Label(root, text=player_symbol, width=10, height=4, relief="ridge")
+                    label.grid(row=i, column=j)
+                    
+        #make the player able to click on the non occupied grids and call the updateState with the column and row
+        
         root.update()
 
-
+    
+    
+    
 class Player:
     def __init__(self, name, exp_rate=0.3):
         self.name = name
@@ -284,7 +330,10 @@ if __name__ == "__main__":
 
     st = State(p1, p2)
 
+    
+    
     while not st.isEnd:
         st.play2()
         st.showBoard()
         root.update()
+    root.mainloop()
