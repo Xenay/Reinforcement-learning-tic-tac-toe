@@ -362,7 +362,7 @@ if __name__ == "__main__":
 
     st = State(p1, p2)
     print("Training...")
-    st.play(100000)
+    st.play(20000)
     
     # Save the trained policy
     p1.savePolicy()
