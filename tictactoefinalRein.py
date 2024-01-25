@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
 import tkinter as tk
+
 BOARD_ROWS = 3
 BOARD_COLS = 3
 
@@ -68,7 +69,7 @@ class State:
         p2 = HumanPlayer("human")
         self.p1 = p1
         self.p2 = p2
-    
+
     def availablePositions(self):
         positions = []
         for i in range(BOARD_ROWS):
@@ -81,25 +82,20 @@ class State:
         self.board[position] = self.playerSymbol
         # switch to another player
         self.playerSymbol = -1 if self.playerSymbol == 1 else 1
-    
-    def onButtonClick(self,row,col):
-        
-        selected_action = (row,col)
+
+    def onButtonClick(self, row, col):
+        selected_action = (row, col)
         self.updateState(selected_action)
         self.showBoard()
         self.play_ai()
         win = self.winner()
         if win is not None:
-                    if win == -1:
-                        print(self.p2.name, "wins!")
-                    else:
-                        print("tie!")
-                    self.reset()
-                    self.showBoard()
-                    
-        
-                
-
+            if win == -1:
+                print(self.p2.name, "wins!")
+            else:
+                print("tie!")
+            self.reset()
+            self.showBoard()
 
     # only when game ends
     def giveReward(self):
@@ -116,7 +112,6 @@ class State:
             self.p2.feedReward(0.5)
 
     # board reset
-    
 
     def play(self, rounds=100):
         for i in range(rounds):
@@ -125,7 +120,9 @@ class State:
             while not self.isEnd:
                 # Player 1
                 positions = self.availablePositions()
-                p1_action = self.p1.chooseAction(positions, self.board, self.playerSymbol)
+                p1_action = self.p1.chooseAction(
+                    positions, self.board, self.playerSymbol
+                )
                 # take action and upate board state
                 self.updateState(p1_action)
                 board_hash = self.getHash()
@@ -145,7 +142,9 @@ class State:
                 else:
                     # Player 2
                     positions = self.availablePositions()
-                    p2_action = self.p2.chooseAction(positions, self.board, self.playerSymbol)
+                    p2_action = self.p2.chooseAction(
+                        positions, self.board, self.playerSymbol
+                    )
                     self.updateState(p2_action)
                     board_hash = self.getHash()
                     self.p2.addState(board_hash)
@@ -159,25 +158,22 @@ class State:
                         self.p2.reset()
                         self.reset()
                         break
-    
-    def play_ai(self):
-            positions = self.availablePositions()
-            p1_action = self.p1.chooseAction(positions, self.board, self.playerSymbol)
-            # take action and upate board state
-            self.updateState(p1_action)
-            self.showBoard()
-            # check board status if it is end
-            win = self.winner()
-            if win is not None:
-                if win == 1:
-                    print(self.p1.name, "wins!")
-                else:
-                    print("tie!")
-                self.reset()
-              
 
-              
-        
+    def play_ai(self):
+        positions = self.availablePositions()
+        p1_action = self.p1.chooseAction(positions, self.board, self.playerSymbol)
+        # take action and upate board state
+        self.updateState(p1_action)
+        self.showBoard()
+        # check board status if it is end
+        win = self.winner()
+        if win is not None:
+            if win == 1:
+                print(self.p1.name, "wins!")
+            else:
+                print("tie!")
+            self.reset()
+
     # play with human
     def play2(self):
         while not self.isEnd:
@@ -218,23 +214,36 @@ class State:
         button = tk.Button(root, text="Button")
         for i in range(BOARD_ROWS):
             for j in range(BOARD_COLS):
-                player_symbol = "X" if self.board[i][j] == 1 else "O" if self.board[i][j] == -1 else " "
-                if(player_symbol == " "):
-                    command = lambda row = i, col = j: self.onButtonClick(row,col)
-                    label=tk.Button(root, text="", width=10, height=4, command=command, relief="ridge")
+                player_symbol = (
+                    "X"
+                    if self.board[i][j] == 1
+                    else "O"
+                    if self.board[i][j] == -1
+                    else " "
+                )
+                if player_symbol == " ":
+                    command = lambda row=i, col=j: self.onButtonClick(row, col)
+                    label = tk.Button(
+                        root,
+                        text="",
+                        width=10,
+                        height=4,
+                        command=command,
+                        relief="ridge",
+                    )
                     label.grid(row=i, column=j)
-                   
+
                 else:
-                    label = tk.Label(root, text=player_symbol, width=10, height=4, relief="ridge")
+                    label = tk.Label(
+                        root, text=player_symbol, width=10, height=4, relief="ridge"
+                    )
                     label.grid(row=i, column=j)
-                    
-        #make the player able to click on the non occupied grids and call the updateState with the column and row
-        
+
+        # make the player able to click on the non occupied grids and call the updateState with the column and row
+
         root.update()
 
-    
-    
-    
+
 class Player:
     def __init__(self, name, exp_rate=0.3):
         self.name = name
@@ -259,7 +268,11 @@ class Player:
                 next_board = current_board.copy()
                 next_board[p] = symbol
                 next_boardHash = self.getHash(next_board)
-                value = 0 if self.states_value.get(next_boardHash) is None else self.states_value.get(next_boardHash)
+                value = (
+                    0
+                    if self.states_value.get(next_boardHash) is None
+                    else self.states_value.get(next_boardHash)
+                )
                 # print("value", value)
                 if value >= value_max:
                     value_max = value
@@ -276,19 +289,21 @@ class Player:
         for st in reversed(self.states):
             if self.states_value.get(st) is None:
                 self.states_value[st] = 0
-            self.states_value[st] += self.lr * (self.decay_gamma * reward - self.states_value[st])
+            self.states_value[st] += self.lr * (
+                self.decay_gamma * reward - self.states_value[st]
+            )
             reward = self.states_value[st]
 
     def reset(self):
         self.states = []
 
     def savePolicy(self):
-        fw = open('policy_' + str(self.name), 'wb')
+        fw = open("policy_" + str(self.name), "wb")
         pickle.dump(self.states_value, fw)
         fw.close()
 
     def loadPolicy(self, file):
-        fr = open(file, 'rb')
+        fr = open(file, "rb")
         self.states_value = pickle.load(fr)
         fr.close()
 
@@ -317,10 +332,8 @@ class HumanPlayer:
         pass
 
 
-
 if __name__ == "__main__":
     # training
-    
 
     p1 = Player("p1")
     p2 = Player("p2")
@@ -328,7 +341,7 @@ if __name__ == "__main__":
     st = State(p1, p2)
     print("training...")
 
-    #st.play(50000)
+    st.play(50000)
 
     root = tk.Tk()
     root.title("Tic Tac Toe")
@@ -340,10 +353,8 @@ if __name__ == "__main__":
 
     st = State(p1, p2)
 
-    
-    
-    while not st.isEnd:
-        st.play2()
-        st.showBoard()
-        root.update()
-    root.mainloop()
+    # while not st.isEnd:
+    #    st.play2()
+    #    st.showBoard()
+    #    root.update()
+    # root.mainloop()
